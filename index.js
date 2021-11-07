@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
+const { getLocales } = require('./locales.js');
+const { getTranslation } = require('./translation.js');
 
 // Create a server:
 const app = express();
@@ -12,36 +14,25 @@ app.use(cors({
 
 // Create a schema and a root resolver:
 const schema = buildSchema(`
+    type Locale {
+        key: String!
+    }
+
     type Translation {
         key: String!
         text: String!
-        locale: String!
+        locale: Locale!
     }
 
     type Query {
-        translations: [Translation]
+        locales: [Locale]
         translation(key: String!, locale: String!): Translation
     }
-    `);
-
-const translations = [
-{
-    key: "app_name",
-    text: "Mortgage Overpayment Calculator",
-    locale: "en-US",
-},
-{
-    key: "app_name",
-    text: "Calculadora de Hipoteca",
-    locale: "pt-BR",
-}
-]
+`);
 
 const rootValue = {
-    translations: () => {
-        return translations;
-    },
-    translation: ({ key, locale }) => translations.find((t) => (t.key === key && t.locale === locale)),
+    locales: () => getLocales(),
+    translation: ({ key, locale }) => getTranslation(key, locale)
 };
 
 // Use those to handle incoming requests:
